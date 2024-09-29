@@ -29,6 +29,25 @@ const K: [u32; 64] = [0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
 	0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391];
 
 
+fn f_func(x: u32, y: u32, z: u32) -> u32 {
+	x & y | ((!x) & 0xffffffff) & z
+}
+
+fn g_func(x: u32, y: u32, z: u32) -> u32 {
+	x & z | y & ((!z) & 0xffffffff) 
+}
+
+fn h_func(x: u32, y: u32, z: u32) -> u32 {
+	x ^ y ^ z
+}
+
+fn i_func(x: u32, y: u32, z: u32) -> u32 {
+	y ^ (x | ((!z) & 0xffffffff))
+}
+
+fn rotate_left (x: u32, n: u32) -> u32 {
+	(x << n) | (x >> (32 - n))
+}
 
 // fn print_bytes(s: &str) {
 // 	let bytes = s.as_bytes();
@@ -38,15 +57,13 @@ const K: [u32; 64] = [0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
 // 	}
 // }
 
-fn print_bytes(s: &Vec<u8>) {
+// fn print_bytes(s: &Vec<u8>) {
 
-	for byte in s.iter() {
-		print!("{byte:x} ");
-	}
-	println!()
-}
-
- 
+// 	for byte in s.iter() {
+// 		print!("{byte:x} ");
+// 	}
+// 	println!()
+// }
 
 fn print_hash(hash: [u32; 4]) {
 	
@@ -78,6 +95,85 @@ fn make_padded_vec(input: &str) -> Vec<u8> {
 	input_vec
 }
 
+fn transform_to_u32(input: &Vec<u8>, start: usize) -> Vec<u32>  {
+	let mut words: Vec<u32> = Vec::new();
+
+	let mut	tmp: Vec<u8> = Vec::new(); 
+
+	let len: usize = start + 64;
+
+	let mut byte_count = 0;
+	for i in start..len {
+		tmp.push(input[i].clone());
+		if byte_count == 3 {
+            let byte_arr: [u8; 4] = tmp.clone().try_into().unwrap();
+			let word: u32 = u32::from_ne_bytes(byte_arr);
+			words.push(word);
+			tmp.clear();
+			byte_count = 0;
+		}
+		else {
+			byte_count += 1;
+		}
+	}
+	words
+}
+
+fn hash_loop(input: Vec<u8>, hash: &mut [u32; 4]) {
+	let mut i = 0;
+
+	while i < input.len() {
+		let words: Vec<u32>  = transform_to_u32(&input, i);
+
+		let mut a: u32 = hash[0];
+		let mut b: u32 = hash[1];
+		let mut c: u32 = hash[2];
+		let mut d: u32 = hash[3];
+
+		for j in 0..64 {
+			let mut e: u32 = 0;
+			let mut k: u32 = 0;
+
+			match j / 16 {
+				0 => { 
+					e = f_func(b, c, d);
+					k = j;
+				},
+				1 => {
+					e = g_func(b, c, d);
+					k = (j * 5 + 1) % 16;
+				},
+				2 => {
+					e = h_func(b, c, d);
+					k = (j * 3 + 5) % 16;
+				},
+				3 => {
+					e = i_func(b, c, d);
+					k = (j * 7) % 16;
+				},
+				_ => (),
+			}
+
+			let tmp: u32 = b.wrapping_add(
+				rotate_left(
+					a.wrapping_add(e)
+					.wrapping_add(K[j as usize])
+					.wrapping_add(words[k as usize]),
+						 S[j as usize]));
+			
+			a = d;
+			d = c;
+			c = b;
+			b = tmp;
+		}
+		hash[0] = hash[0].wrapping_add(a);
+		hash[1] = hash[1].wrapping_add(b);
+		hash[2] = hash[2].wrapping_add(c);
+		hash[3] = hash[3].wrapping_add(d);
+		
+		i += 64;
+	}
+}
 fn main() {
 	let args: Vec<String> = env::args().collect();
 	
@@ -87,13 +183,11 @@ fn main() {
 	}
 
 	let input = String::from(args[1].clone());
-	let hash: [u32; 4] = [A, B, C, D];
+	let mut hash: [u32; 4] = [A, B, C, D];
 	
-	let len: u64= ((((input.len() as u64) + 8) / 64) + 1) * 64;
-
 	let padded: Vec<u8> = make_padded_vec(&input);
 	
-	//hash_loop(padded, len, hash);
+	hash_loop(padded, &mut hash);
 	
 	print_hash(hash);
 }

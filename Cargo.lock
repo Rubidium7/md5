@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "md5ru"
+name = "md5"
 version = "0.1.0"
