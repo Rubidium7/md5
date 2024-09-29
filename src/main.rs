@@ -1,4 +1,5 @@
 use std::env;
+use std::num::Wrapping;
 
 const A: u32 = 0x67452301;
 const B: u32 = 0xefcdab89;
@@ -37,14 +38,15 @@ const K: [u32; 64] = [0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
 // 	}
 // }
 
-// 	uint8_t *p;
+fn print_bytes(s: &Vec<u8>) {
+
+	for byte in s.iter() {
+		print!("{byte:x} ");
+	}
+	println!()
+}
+
  
-	// for (size_t i = 0; i != len; i++)
-	// {
-    // 	p = (uint8_t *)&hash[i];
-    // 	printf("%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3]);
-	// }
-	// printf("\n");
 
 fn print_hash(hash: [u32; 4]) {
 	
@@ -59,6 +61,23 @@ fn print_hash(hash: [u32; 4]) {
 	println!("{message_digest}");
 }
 
+fn make_padded_vec(input: &str) -> Vec<u8> {
+
+	let og_len_in_bits = Wrapping(input.len() as u64 * 8);
+	let mut input_vec: Vec<u8> = Vec::new();
+	input_vec.extend(input.as_bytes());
+	input_vec.push(128_u8);
+
+	while (input_vec.len() * 8) % 512 != 448 {
+		input_vec.push(0_u8);
+	}
+	let og_len_in_bytes : [u8; 8] = og_len_in_bits.0.to_le_bytes();
+	let mut og_len_in_bytes = og_len_in_bytes.to_vec();
+	input_vec.append(&mut og_len_in_bytes);
+
+	input_vec
+}
+
 fn main() {
 	let args: Vec<String> = env::args().collect();
 	
@@ -68,13 +87,13 @@ fn main() {
 	}
 
 	let input = String::from(args[1].clone());
-
 	let hash: [u32; 4] = [A, B, C, D];
+	
+	let len: u64= ((((input.len() as u64) + 8) / 64) + 1) * 64;
 
-	let len = ((((input.len() + 8) / 64) + 1) * 64) - 8 + 4;
-
-	println!("{len}");
-	// let padded = add_padding(input, len);
-	// hash_loop(padded, len, hash);
+	let padded: Vec<u8> = make_padded_vec(&input);
+	
+	//hash_loop(padded, len, hash);
+	
 	print_hash(hash);
 }
