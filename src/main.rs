@@ -1,5 +1,25 @@
 use std::env;
+use std::error;
+use std::error::Error;
+use std::fs;
+use std::fmt;
+use std::io;
+use std::io::Read;
+use std::io::BufReader;
 use std::num::Wrapping;
+
+type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
+
+#[derive(Debug, Clone)]
+struct InputError;
+
+impl Error for InputError{}
+
+impl fmt::Display for InputError {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "usage: ./md5 (= reads stdin)\nor\nusage: ./md5 -s <string>\nor\nusage: ./md5 <filename>")
+	}
+}
 
 const A: u32 = 0x67452301;
 const B: u32 = 0xefcdab89;
@@ -174,15 +194,54 @@ fn hash_loop(input: Vec<u8>, hash: &mut [u32; 4]) {
 		i += 64;
 	}
 }
-fn main() {
+
+fn read_from_stdin() -> Result<String>
+{
+	let mut result = String::new();
+
+	for line in io::stdin().lines() {
+		let tmp = line?;
+		result = result.clone() + &tmp;
+	}
+	Ok(result)
+}
+
+fn get_input(args: &Vec<String>) -> Result<String> {
+	match args.len() {
+		1 => read_from_stdin(),
+		2 => {
+			if args[1] == "-s" {				
+				return Err(Box::new(InputError));
+			}
+			let infile = fs::File::open(args[1].clone())?;
+			
+			let mut buf_reader = BufReader::new(infile);
+			let mut input = String::new();
+			let result = buf_reader.read_to_string(&mut input);
+			match result {
+				Ok(_) => Ok(input),
+				Err(error) => Err(Box::new(error)),
+			}
+		},
+		3 => {
+			if args[1] != "-s" {
+				return Err(Box::new(InputError));
+			}
+			Ok(String::from(args[2].clone()))
+		},
+		_ => { 
+			Err(Box::new(InputError))			
+		},
+	}
+}
+fn main() -> Result<()> {
 	let args: Vec<String> = env::args().collect();
 	
-	if args.len() != 2 {
-		eprintln!("usage: {} <string>", args[0]);
-		return ;
-	}
-
-	let input = String::from(args[1].clone());
+	let input = get_input(&args).unwrap_or_else(|error| {
+		eprintln!("{error}");
+		panic!("{error:?}");
+	});
+	
 	let mut hash: [u32; 4] = [A, B, C, D];
 	
 	let padded: Vec<u8> = make_padded_vec(&input);
@@ -190,4 +249,5 @@ fn main() {
 	hash_loop(padded, &mut hash);
 	
 	print_hash(hash);
+	Ok(())
 }
