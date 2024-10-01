@@ -28,7 +28,7 @@
 
 ![product-screenshot](./screenshots/md5.PNG)
 
-This was the second project on my personal 10-day hackathon learn about cryptography, and coding in rust, and to deepen my knowledge about network protocols and TLS/SSL.
+This was the second project on my personal 10-day hackathon to learn about cryptography, and coding in rust, and to deepen my knowledge about network protocols and TLS/SSL.
 
 I wanted to learn Rust and as I'm very much a learn-by-doing sort of fellow, I decided to just jump right away into writing a functional program. 
 I did read some bit of [The Rust Programming Language Book](https://doc.rust-lang.org/book/ch00-00-introduction.html) to get started, but after that I just started writing and learning on the fly.
