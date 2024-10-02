@@ -28,16 +28,11 @@
 
 ![product-screenshot](./screenshots/md5.PNG)
 
-This was the second project on my personal 10-day hackathon to learn about cryptography, and coding in rust, and to deepen my knowledge about network protocols and TLS/SSL.
+This was the second project on my personal 10-day [hackathon](https://github.com/Rubidium7/hackathon) to learn about cryptography, and coding in rust, and to deepen my knowledge about network protocols and TLS/SSL.
 
-I wanted to learn Rust and as I'm very much a learn-by-doing sort of fellow, I decided to just jump right away into writing a functional program. 
-I did read some bit of [The Rust Programming Language Book](https://doc.rust-lang.org/book/ch00-00-introduction.html) to get started, but after that I just started writing and learning on the fly.
+Basically this is just the md5 algorithm implemented in Rust. You give it an input string and it outputs a 128-bit hash.
 
-### Some of my takeaway points from that process
-- the rust compiler's attitude did take a bit to get used to, but in the end I do really appreciate the fact that after getting the program to compile you can really trust that it won't suddenly crash and burn (looking at you gcc)
-- a lot of the rust methods felt really natural coming from c++ and python (yes, i really didn't expect either it would have so many similarities with python)
-- the most difficult part about this project ended up being trying to define an error type and also simutaniously using predefined error types. I didn't expect it would ~~be so hard~~ lead to such a fruitful road of learning about closures, boxes, results etc.
-- it did make me think about the less talked about potential vulnerabilities of languages like C, for example accepting numbers to overflow and having a NULL-type
+And btw this is my first ever project in rust, so don't @ me if there's some unconventional handlings of things, it's all part of the learning process :D
 
 
 
