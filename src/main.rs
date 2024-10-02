@@ -85,19 +85,6 @@ fn rotate_left (x: u32, n: u32) -> u32 {
 // 	println!()
 // }
 
-fn print_hash(hash: [u32; 4]) {
-	
-    let message_digest = format!(
-        "{:08x}{:08x}{:08x}{:08x}",
-        hash[0].swap_bytes(),
-        hash[1].swap_bytes(),
-        hash[2].swap_bytes(),
-        hash[3].swap_bytes()
-    );
-
-	println!("{message_digest}");
-}
-
 fn make_padded_vec(input: &str) -> Vec<u8> {
 
 	let og_len_in_bits = Wrapping(input.len() as u64 * 8);
@@ -115,11 +102,9 @@ fn make_padded_vec(input: &str) -> Vec<u8> {
 	input_vec
 }
 
-fn transform_to_u32(input: &Vec<u8>, start: usize) -> Vec<u32>  {
+fn cut_to_u32_words(input: &Vec<u8>, start: usize) -> Vec<u32>  {
 	let mut words: Vec<u32> = Vec::new();
-
 	let mut	tmp: Vec<u8> = Vec::new(); 
-
 	let len: usize = start + 64;
 
 	let mut byte_count = 0;
@@ -127,7 +112,7 @@ fn transform_to_u32(input: &Vec<u8>, start: usize) -> Vec<u32>  {
 		tmp.push(input[i].clone());
 		if byte_count == 3 {
             let byte_arr: [u8; 4] = tmp.clone().try_into().unwrap();
-			let word: u32 = u32::from_ne_bytes(byte_arr);
+			let word: u32 = u32::from_le_bytes(byte_arr);
 			words.push(word);
 			tmp.clear();
 			byte_count = 0;
@@ -143,7 +128,7 @@ fn hash_loop(input: Vec<u8>, hash: &mut [u32; 4]) {
 	let mut i = 0;
 
 	while i < input.len() {
-		let words: Vec<u32>  = transform_to_u32(&input, i);
+		let words: Vec<u32>  = cut_to_u32_words(&input, i);
 
 		let mut a: u32 = hash[0];
 		let mut b: u32 = hash[1];
@@ -249,6 +234,10 @@ fn main() -> Result<()> {
 	
 	hash_loop(padded, &mut hash);
 	
-	print_hash(hash);
+    println!( "{:08x}{:08x}{:08x}{:08x}",
+        hash[0].swap_bytes(), hash[1].swap_bytes(),
+        hash[2].swap_bytes(), hash[3].swap_bytes()
+    );
+
 	Ok(())
 }
